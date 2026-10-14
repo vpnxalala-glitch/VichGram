@@ -87,7 +87,31 @@ public class ApplicationLoader extends Application {
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
+        installCrashLogger();
         FirebaseFix.check(base);
+    }
+
+    /**
+     * VichGram: пишем стек необработанного падения в общедоступную папку
+     * Android/media/<пакет>/crash.txt, чтобы вылет можно было разобрать без root и logcat.
+     */
+    private void installCrashLogger() {
+        final String crashPackage = getPackageName();
+        final Thread.UncaughtExceptionHandler previous = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            try {
+                File dir = new File(android.os.Environment.getExternalStorageDirectory(), "Android/media/" + crashPackage);
+                if (dir.exists() || dir.mkdirs()) {
+                    try (java.io.FileWriter writer = new java.io.FileWriter(new File(dir, "crash.txt"), true)) {
+                        writer.write("=== " + new java.util.Date() + " | thread " + thread.getName() + " ===\n");
+                        writer.write(android.util.Log.getStackTraceString(throwable));
+                        writer.write("\n\n");
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+            if (previous != null) previous.uncaughtException(thread, throwable);
+        });
     }
 
     public static ILocationServiceProvider getLocationServiceProvider() {
@@ -302,7 +326,11 @@ public class ApplicationLoader extends Application {
 
         // AndroidUtilities must be initialized before FileLog
         final String helloWorld = AndroidUtilities.getHelloWorld();
-        AnalyticsHelper.start(this);
+        try {
+            AnalyticsHelper.start(this);
+        } catch (Throwable analyticsError) {
+            FileLog.e("VichGram: аналитика недоступна, продолжаем без неё", analyticsError);
+        }
         CronetHelper.init(this);
 
         if (BuildVars.LOGS_ENABLED) {
