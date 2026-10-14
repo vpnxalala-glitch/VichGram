@@ -12,6 +12,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 330
+    permissions:
+      contents: write
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_HARDLINK: "true"
@@ -124,3 +126,15 @@ jobs:
           name: vichgram-base-apk
           path: TMessagesProj_App/build/outputs/apk/release/*.apk
           if-no-files-found: error
+
+      - name: Publish release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: vichgram-${{ github.run_number }}
+          name: VichGram ${{ github.run_number }}
+          body: |
+            VichGram — сборка на базе Telegram (Nekogram) с переименованием и своей иконкой.
+            Ключи API подставлены из секретов репозитория.
+          prerelease: true
+          files: TMessagesProj_App/build/outputs/apk/release/*.apk
