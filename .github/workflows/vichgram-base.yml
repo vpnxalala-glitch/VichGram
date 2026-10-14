@@ -62,6 +62,22 @@ jobs:
           echo 'org.gradle.parallel=true' >> ~/.gradle/gradle.properties
           echo 'org.gradle.jvmargs=-Xmx6g -Dfile.encoding=UTF-8' >> ~/.gradle/gradle.properties
 
+      - name: Configure local.properties
+        env:
+          SECRET_API_ID: ${{ secrets.API_ID }}
+          SECRET_API_HASH: ${{ secrets.API_HASH }}
+          SECRET_MAPS_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          : > local.properties
+          echo "apiId=${SECRET_API_ID:-0}" >> local.properties
+          echo "apiHash=${SECRET_API_HASH}" >> local.properties
+          echo "mapsApiKey=${SECRET_MAPS_KEY}" >> local.properties
+          echo "helperBotId=0" >> local.properties
+          echo "helperBotUsername=" >> local.properties
+          echo "sentryDsn=" >> local.properties
+          echo "--- local.properties (значения скрыты) ---"
+          sed -E 's/^(apiHash|sentryDsn|mapsApiKey)=.*/\1=***/' local.properties
+
       - name: Disk before build
         run: df -h /
 
