@@ -24,9 +24,13 @@ sentry {
     ignoredBuildTypes = ["debug"]
 }
 
-// VichGram: своего аккаунта Sentry нет, а плагин без токена роняет сборку
-// ("Auth token is required"). Выключаем только задачи загрузки — сам SDK остаётся.
-tasks.matching { it.name.toLowerCase().contains('sentry') }.configureEach { enabled = false }
+// VichGram: своего аккаунта Sentry нет, а задачи ВЫГРУЗКИ без токена роняют сборку
+// ("Auth token is required"). Выключаем только их. sentryGenerateIntegrationList
+// трогать нельзя — он готовит входной манифест для processReleaseManifest.
+tasks.matching { t ->
+    def n = t.name.toLowerCase()
+    n.startsWith('uploadsentry') || n.startsWith('sentrybundlesources')
+}.configureEach { enabled = false }
 
 android {
     defaultConfig.applicationId = APP_PACKAGE
