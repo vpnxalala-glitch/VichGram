@@ -93,8 +93,8 @@ jobs:
 
       - name: Configure local.properties
         env:
-          SECRET_API_ID: ${{ secrets.API_ID }}
-          SECRET_API_HASH: ${{ secrets.API_HASH }}
+          SECRET_API_ID: ${{ secrets.API_ID || secrets.VICHGRAM_TG_API_ID }}
+          SECRET_API_HASH: ${{ secrets.API_HASH || secrets.VICHGRAM_TG_API_HASH }}
           SECRET_MAPS_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           : > local.properties
