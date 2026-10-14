@@ -62,6 +62,35 @@ jobs:
           echo 'org.gradle.parallel=true' >> ~/.gradle/gradle.properties
           echo 'org.gradle.jvmargs=-Xmx6g -Dfile.encoding=UTF-8' >> ~/.gradle/gradle.properties
 
+      - name: Create google-services.json
+        run: |
+          PKG=$(sed -n 's/^APP_PACKAGE=//p' gradle.properties | tr -d '[:space:]')
+          if [ -z "$PKG" ]; then PKG=tw.nekomimi.nekogram; fi
+          cat > TMessagesProj_App/google-services.json <<'JSON'
+          {
+            "project_info": {
+              "project_number": "0",
+              "project_id": "vichgram",
+              "storage_bucket": "vichgram.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:0:android:0000000000000000000000",
+                  "android_client_info": { "package_name": "PKGPLACEHOLDER" }
+                },
+                "oauth_client": [],
+                "api_key": [ { "current_key": "AIzaSyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" } ],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
+          sed -i "s/PKGPLACEHOLDER/$PKG/" TMessagesProj_App/google-services.json
+          python3 -c "import json;json.load(open('TMessagesProj_App/google-services.json'))"
+          echo "google-services.json готов для пакета $PKG"
+
       - name: Configure local.properties
         env:
           SECRET_API_ID: ${{ secrets.API_ID }}
